@@ -15,7 +15,7 @@ export default function App() {
     <RouterProvider
       router={router}
       defaultPendingComponent={Spinner}
-      defaultPendingMs={0}
+      defaultPendingMs={200}
     />
   );
 }

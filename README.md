@@ -18,6 +18,7 @@
 
 ## 20/04/2024
 
+- Most important doc: https://tanstack.com/router/v1/docs/framework/react/api/router/RouterOptionsType, When route is loading the pending components needs a defaultPendingMs value
 - Added lazy loading for the single post similar to tanstack 
 - Used custom pokemon API for pokemon to test the pendingcomponent as it didn't work before because the page was empty
 - Use prettier instead of biome, Kanso faced major issues with it   
