@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPokemon } from "../../api/pokemon";
-import Spinner from "../../components/Spinner";
 
 export const Route = createFileRoute("/posts/$postId")({
-  pendingComponent: () => <Spinner />,
   component: Pokemon,
   loader: async ({ params }) => await getPokemon(params.postId),
 });
