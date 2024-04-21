@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
+    "lint": "biome lint src --apply"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.28.4",
@@ -15,8 +16,10 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.7.0",
     "@tanstack/router-devtools": "^1.28.4",
     "@tanstack/router-vite-plugin": "^1.28.2",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
@@ -27,6 +30,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "postcss": "^8.4.38",
+    "prettier": "3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.14",
     "sass": "^1.75.0",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2",
