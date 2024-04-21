@@ -23,3 +23,8 @@
 - Added lazy loading for the single post similar to tanstack 
 - Used custom pokemon API for pokemon to test the pendingcomponent as it didn't work before because the page was empty
 - Use prettier instead of biome, Kanso faced major issues with it   
+
+## 21/04/2024
+
+- Using active psedo class for the active route, also there is option used in the tanstack docs for the Link activeProps={{className: 'font-bold',}}
+- Name the component in a better hierarchical way
