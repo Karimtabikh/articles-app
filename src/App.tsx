@@ -1,6 +1,6 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import Spinner from "./components/Spinner";
+import SpinnerLoader from "./components/loaders/SpinnerLoader";
 
 const router = createRouter({ routeTree });
 
@@ -14,7 +14,7 @@ export default function App() {
   return (
     <RouterProvider
       router={router}
-      defaultPendingComponent={Spinner}
+      defaultPendingComponent={SpinnerLoader}
       defaultPendingMs={200}
     />
   );
