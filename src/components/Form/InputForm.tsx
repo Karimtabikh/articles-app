@@ -1,11 +1,20 @@
 "use client";
-
+import { useRef, useState } from "react";
+import useAutosizeTextArea from "../useAutosizeTextArea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import TextareaAutosize from "react-textarea-autosize";
+import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   Form,
@@ -23,9 +32,21 @@ const FormSchema = z.object({
     message: "Username must be at least 2 characters.",
   }),
   description: z.string(),
+  category: z.string(),
 });
 
 export function InputForm() {
+  const [value, setValue] = useState("");
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  useAutosizeTextArea(textAreaRef.current, value);
+
+  const handleChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = evt.target?.value;
+
+    setValue(val);
+  };
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -66,7 +87,35 @@ export function InputForm() {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <TextareaAutosize minRows={3}/>
+                  <AutoResizeTextarea
+                    onChange={handleChange}
+                    ref={textAreaRef}
+                    rows={3}
+                    value={value}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <FormControl>
+                  <Select>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="health">Health</SelectItem>
+                      <SelectItem value="science">Science</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
