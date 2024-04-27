@@ -7,6 +7,7 @@ import { z } from "zod";
 import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
+import Dropzone from "../ui/Dropzone";
 
 import {
   Select,
@@ -27,16 +28,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
+const ACCEPTED_FILE_TYPES = ["image/png"];
+
 const FormSchema = z.object({
   username: z.string().min(2, {
     message: "Username must be at least 2 characters.",
   }),
   description: z.string(),
   category: z.string(),
+  file: z
+    .instanceof(File)
+    .optional()
+    .refine((file) => {
+      return !file || file.size <= MAX_UPLOAD_SIZE;
+    }, "File size must be less than 3MB")
+    .refine((file) => {
+      return ACCEPTED_FILE_TYPES.includes(file.type);
+    }, "File must be a PNG"),
 });
 
 export function InputForm() {
   const [value, setValue] = useState("");
+  const [filePreviews, setFilePreviews] = useState([]);
+
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(textAreaRef.current, value);
@@ -51,8 +66,54 @@ export function InputForm() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       username: "",
+      file: null,
     },
+    shouldFocusError: true,
+    shouldUnregister: false,
+    shouldUseNativeValidation: false,
   });
+
+  function removeFilePreview(index: number) {
+    const updatedPreviews = [...filePreviews];
+    updatedPreviews.splice(index, 1);
+    setFilePreviews(updatedPreviews);
+    form.setValue("file", null);
+  }
+
+  function handleOnDrop(acceptedFiles: FileList | null) {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      const allowedTypes = [
+        {
+          name: "image",
+          types: ["image/png", "image/jpg", "image/jpeg"],
+        },
+      ];
+      const fileType = allowedTypes.find((allowedType) =>
+        allowedType.types.find((type) => type === acceptedFiles[0].type)
+      );
+      if (!fileType) {
+        form.setValue("file", null);
+        form.setError("file", {
+          message: "File type is not valid",
+          type: "typeError",
+        });
+      } else {
+        form.setValue("file", acceptedFiles[0]);
+        form.clearErrors("file");
+
+        const filePreviews = Array.from(acceptedFiles).map((file) =>
+          URL.createObjectURL(file)
+        );
+        setFilePreviews(filePreviews);
+      }
+    } else {
+      form.setValue("file", null);
+      form.setError("file", {
+        message: "File is required",
+        type: "typeError",
+      });
+    }
+  }
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     toast.message("Form Submitted");
@@ -88,6 +149,7 @@ export function InputForm() {
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <AutoResizeTextarea
+                    {...field}
                     onChange={handleChange}
                     ref={textAreaRef}
                     rows={3}
@@ -121,6 +183,39 @@ export function InputForm() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="file"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormControl>
+                  <Dropzone
+                    {...field}
+                    dropMessage="Drop files or click here"
+                    multiple
+                    handleOnDrop={handleOnDrop}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex space-x-2 mt-2">
+            {filePreviews.map((preview, index) => (
+              <div key={index} className="relative">
+                <img src={preview} className="w-20 h-20 object-cover" />
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 p-1 bg-red-500 rounded-full text-white"
+                  onClick={() => removeFilePreview(index)}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
 
           <Button type="submit">Submit</Button>
         </form>
