@@ -115,6 +115,10 @@ export function InputForm() {
     }
   }
 
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>): void {
+    handleOnDrop(event.clipboardData.files);
+  }
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
     toast.message("Form Submitted");
   }
@@ -184,37 +188,39 @@ export function InputForm() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="file"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormControl>
-                  <Dropzone
-                    {...field}
-                    dropMessage="Drop files or click here"
-                    multiple
-                    handleOnDrop={handleOnDrop}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div onPaste={handlePaste}>
+            <FormField
+              control={form.control}
+              name="file"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormControl>
+                    <Dropzone
+                      {...field}
+                      dropMessage="Drop files or click here"
+                      multiple
+                      handleOnDrop={handleOnDrop}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="flex space-x-2 mt-2">
-            {filePreviews.map((preview, index) => (
-              <div key={index} className="relative">
-                <img src={preview} className="w-20 h-20 object-cover" />
-                <button
-                  type="button"
-                  className="absolute top-0 right-0 p-1 bg-red-500 rounded-full text-white"
-                  onClick={() => removeFilePreview(index)}
-                >
-                  X
-                </button>
-              </div>
-            ))}
+            <div className="flex space-x-2 mt-2">
+              {filePreviews.map((preview, index) => (
+                <div key={index} className="relative">
+                  <img src={preview} className="w-32 h-32 object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-white rounded-full text-black text-xs px-1 font-medium	font-mono" 
+                    onClick={() => removeFilePreview(index)}
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           <Button type="submit">Submit</Button>
