@@ -1,13 +1,19 @@
-"use client";
-import { useRef, useState } from "react";
-import useAutosizeTextArea from "../useAutosizeTextArea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
+import { FormSchema } from "./ZodValidation";
 import Dropzone from "../ui/Dropzone";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 import {
   Select,
@@ -17,41 +23,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { AutoResizeTextarea } from "../ui/autoresizetextarea";
+import { useState, useRef } from "react";
+import useAutosizeTextArea from "../useAutosizeTextArea";
 
-const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
-const ACCEPTED_FILE_TYPES = ["image/png"];
-
-const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  description: z.string(),
-  category: z.string(),
-  file: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => {
-      return !file || file.size <= MAX_UPLOAD_SIZE;
-    }, "File size must be less than 3MB")
-    .refine((file) => {
-      return ACCEPTED_FILE_TYPES.includes(file.type);
-    }, "File must be a PNG"),
-});
+type FormSchemaType = z.infer<typeof FormSchema>;
 
 export function InputForm() {
-  const [value, setValue] = useState("");
   const [filePreviews, setFilePreviews] = useState([]);
-
+  const [value, setValue] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(textAreaRef.current, value);
@@ -62,15 +43,13 @@ export function InputForm() {
     setValue(val);
   };
 
-  const form = useForm<z.infer<typeof FormSchema>>({
+  const form = useForm<FormSchemaType>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      username: "",
-      file: null,
+      name: "",
+      category: "",
+      description: "",
     },
-    shouldFocusError: true,
-    shouldUnregister: false,
-    shouldUseNativeValidation: false,
   });
 
   function removeFilePreview(index: number) {
@@ -120,7 +99,8 @@ export function InputForm() {
   }
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast.message("Form Submitted");
+    // toast.message("Form Submitted");
+    console.log(data);
   }
 
   return (
@@ -133,10 +113,10 @@ export function InputForm() {
         >
           <FormField
             control={form.control}
-            name="username"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input placeholder="shadcn" {...field} />
                 </FormControl>
@@ -149,11 +129,10 @@ export function InputForm() {
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
+              <FormItem {...field}>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <AutoResizeTextarea
-                    {...field}
                     onChange={handleChange}
                     ref={textAreaRef}
                     rows={3}
@@ -169,12 +148,12 @@ export function InputForm() {
             control={form.control}
             name="category"
             render={({ field }) => (
-              <FormItem>
+              <FormItem {...field}>
                 <FormLabel>Category</FormLabel>
                 <FormControl>
                   <Select>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Category" {...field} />
+                      <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="technology">Technology</SelectItem>
@@ -213,7 +192,7 @@ export function InputForm() {
                   <img src={preview} className="w-32 h-32 object-cover" />
                   <button
                     type="button"
-                    className="absolute top-1 right-1 bg-white rounded-full text-black text-xs px-1 font-medium	font-mono" 
+                    className="absolute top-1 right-1 bg-white rounded-full text-black text-xs px-1 font-medium	font-mono"
                     onClick={() => removeFilePreview(index)}
                   >
                     X

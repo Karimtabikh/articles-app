@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { InputForm } from "@/components/Form/InputForm";
+import { InputForm } from "@/components/Form/InputFormTest";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
