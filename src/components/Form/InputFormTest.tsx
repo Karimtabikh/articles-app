@@ -1,10 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { FormSchema } from "./ZodValidation";
+import { FormSchema } from "../../schema/ZodValidation";
 import Dropzone from "../ui/Dropzone";
+import { useMutation } from "react-query";
+import * as article from "@/lib/api/article";
 
 import {
   Form,
@@ -27,11 +29,12 @@ import { Input } from "@/components/ui/input";
 import { AutoResizeTextarea } from "../ui/autoresizetextarea";
 import { useState, useRef } from "react";
 import useAutosizeTextArea from "../useAutosizeTextArea";
+import { Article } from "@/types";
 
 type FormSchemaType = z.infer<typeof FormSchema>;
 
 export function InputForm() {
-  const [filePreviews, setFilePreviews] = useState([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [value, setValue] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -46,61 +49,71 @@ export function InputForm() {
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: "",
-      category: "",
+      title: "",
+      // category: "",
       description: "",
     },
   });
 
-  function removeFilePreview(index: number) {
-    const updatedPreviews = [...filePreviews];
-    updatedPreviews.splice(index, 1);
-    setFilePreviews(updatedPreviews);
-    form.setValue("file", null);
-  }
+  // function removeFilePreview(index: number) {
+  //   const updatedPreviews = [...filePreviews];
+  //   updatedPreviews.splice(index, 1);
+  //   setFilePreviews(updatedPreviews);
+  //   form.setValue("file", null);
+  // }
 
-  function handleOnDrop(acceptedFiles: FileList | null) {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      const allowedTypes = [
-        {
-          name: "image",
-          types: ["image/png", "image/jpg", "image/jpeg"],
-        },
-      ];
-      const fileType = allowedTypes.find((allowedType) =>
-        allowedType.types.find((type) => type === acceptedFiles[0].type)
-      );
-      if (!fileType) {
-        form.setValue("file", null);
-        form.setError("file", {
-          message: "File type is not valid",
-          type: "typeError",
-        });
-      } else {
-        form.setValue("file", acceptedFiles[0]);
-        form.clearErrors("file");
+  // function handleOnDrop(acceptedFiles: FileList | null) {
+  //   if (acceptedFiles && acceptedFiles.length > 0) {
+  //     const allowedTypes = [
+  //       {
+  //         name: "image",
+  //         types: ["image/png", "image/jpg", "image/jpeg"],
+  //       },
+  //     ];
+  //     const fileType = allowedTypes.find((allowedType) =>
+  //       allowedType.types.find((type) => type === acceptedFiles[0].type)
+  //     );
+  //     if (!fileType) {
+  //       form.setValue("file", null);
+  //       form.setError("file", {
+  //         message: "File type is not valid",
+  //         type: "typeError",
+  //       });
+  //     } else {
+  //       form.setValue("file", acceptedFiles[0]);
+  //       form.clearErrors("file");
 
-        const filePreviews = Array.from(acceptedFiles).map((file) =>
-          URL.createObjectURL(file)
-        );
-        setFilePreviews(filePreviews);
-      }
-    } else {
-      form.setValue("file", null);
-      form.setError("file", {
-        message: "File is required",
-        type: "typeError",
-      });
-    }
-  }
+  //       const filePreviews = Array.from(acceptedFiles).map((file) =>
+  //         URL.createObjectURL(file)
+  //       );
+  //       setFilePreviews(filePreviews);
+  //     }
+  //   } else {
+  //     form.setValue("file", null);
+  //     form.setError("file", {
+  //       message: "File is required",
+  //       type: "typeError",
+  //     });
+  //   }
+  // }
 
-  function handlePaste(event: ClipboardEvent<HTMLDivElement>): void {
-    handleOnDrop(event.clipboardData.files);
-  }
+  // function handlePaste(event: ClipboardEventHandler<HTMLDivElement>): void {
+  //   handleOnDrop(event.clipboardData.files);
+  // }
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    // toast.message("Form Submitted");
+  const mutation = useMutation({
+    mutationFn: (data: FormSchemaType) => {
+      return article.create(data);
+    },
+    onSuccess: () => {
+      alert("Artciel created");
+    },
+  });
+
+  function onSubmit(data: FormSchemaType) {
     console.log(data);
+    toast.message("Form Submitted");
+    mutation.mutate(data);
   }
 
   return (
@@ -113,10 +126,10 @@ export function InputForm() {
         >
           <FormField
             control={form.control}
-            name="name"
+            name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Title</FormLabel>
                 <FormControl>
                   <Input placeholder="shadcn" {...field} />
                 </FormControl>
@@ -144,7 +157,7 @@ export function InputForm() {
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="category"
             render={({ field }) => (
@@ -200,7 +213,7 @@ export function InputForm() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           <Button type="submit">Submit</Button>
         </form>
