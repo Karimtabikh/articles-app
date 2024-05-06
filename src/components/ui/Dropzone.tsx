@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import React, { type ChangeEvent, useRef } from "react";
 
 interface DropzoneProps
   extends Omit<
@@ -17,7 +17,7 @@ interface DropzoneProps
 const Dropzone = React.forwardRef<HTMLDivElement, DropzoneProps>(
   (
     { className, classNameWrapper, dropMessage, handleOnDrop, ...props },
-    ref
+    ref,
   ) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -51,7 +51,7 @@ const Dropzone = React.forwardRef<HTMLDivElement, DropzoneProps>(
         ref={ref}
         className={cn(
           `border-2 border-dashed bg-muted hover:cursor-pointer hover:border-muted-foreground/50`,
-          classNameWrapper
+          classNameWrapper,
         )}
       >
         <CardContent
@@ -77,7 +77,7 @@ const Dropzone = React.forwardRef<HTMLDivElement, DropzoneProps>(
         </CardContent>
       </Card>
     );
-  }
+  },
 );
 
 export default Dropzone;

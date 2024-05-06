@@ -1,14 +1,16 @@
 "use client";
-import { useRef, useState } from "react";
-import useAutosizeTextArea from "../useAutosizeTextArea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Toaster, toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
-import Dropzone from "../ui/Dropzone";
 
+import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,17 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Toaster, toast } from "sonner";
+import { z } from "zod";
 
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import Dropzone from "../ui/Dropzone";
+import useAutosizeTextArea from "../useAutosizeTextArea";
 
 const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
 const ACCEPTED_FILE_TYPES = ["image/png"];
@@ -89,7 +88,7 @@ export function InputForm() {
         },
       ];
       const fileType = allowedTypes.find((allowedType) =>
-        allowedType.types.find((type) => type === acceptedFiles[0].type)
+        allowedType.types.find((type) => type === acceptedFiles[0].type),
       );
       if (!fileType) {
         form.setValue("file", null);
@@ -102,7 +101,7 @@ export function InputForm() {
         form.clearErrors("file");
 
         const filePreviews = Array.from(acceptedFiles).map((file) =>
-          URL.createObjectURL(file)
+          URL.createObjectURL(file),
         );
         setFilePreviews(filePreviews);
       }
@@ -207,13 +206,13 @@ export function InputForm() {
               )}
             />
 
-            <div className="flex space-x-2 mt-2">
+            <div className="mt-2 flex space-x-2">
               {filePreviews.map((preview, index) => (
                 <div key={index} className="relative">
-                  <img src={preview} className="w-32 h-32 object-cover" />
+                  <img src={preview} className="h-32 w-32 object-cover" />
                   <button
                     type="button"
-                    className="absolute top-1 right-1 bg-white rounded-full text-black text-xs px-1 font-medium	font-mono" 
+                    className="absolute right-1 top-1 rounded-full bg-white px-1 font-mono text-xs font-medium	text-black"
                     onClick={() => removeFilePreview(index)}
                   >
                     X

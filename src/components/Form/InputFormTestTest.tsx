@@ -9,15 +9,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import * as article from "@/lib/api/article";
+import type { ArticleTest } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation } from "react-query";
-import { Toaster, toast } from "sonner";
-import type { z } from "zod";
 
-import { FormSchema } from "../../schema/ZodValidation";
-import Dropzone from "../ui/Dropzone";
+import { formSchema } from "../../schema/ZodValidationtest";
 import { AutoResizeTextarea } from "../ui/autoresizetextarea";
 import {
   Select,
@@ -28,10 +26,7 @@ import {
 } from "../ui/select";
 import useAutosizeTextArea from "../useAutosizeTextArea";
 
-type FormSchemaType = z.infer<typeof FormSchema>;
-
 export function InputForm() {
-  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [value, setValue] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -43,65 +38,18 @@ export function InputForm() {
     setValue(val);
   };
 
-  const form = useForm<FormSchemaType>({
+  const form = useForm<ArticleTest>({
     defaultValues: {
       title: "",
       category: "",
       description: "",
-      file: undefined,
     },
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(formSchema),
   });
 
-  // function removeFilePreview(index: number) {
-  //   const updatedPreviews = [...filePreviews];
-  //   updatedPreviews.splice(index, 1);
-  //   setFilePreviews(updatedPreviews);
-  //   form.setValue("file", null);
-  // }
-
-  // function handleOnDrop(acceptedFiles: FileList | null) {
-  //   if (acceptedFiles && acceptedFiles.length > 0) {
-  //     const allowedTypes = [
-  //       {
-  //         name: "image",
-  //         types: ["image/png", "image/jpg", "image/jpeg"],
-  //       },
-  //     ];
-  //     const fileType = allowedTypes.find((allowedType) =>
-  //       allowedType.types.find((type) => type === acceptedFiles[0].type),
-  //     );
-  //     if (!fileType) {
-  //       form.setValue("file", null);
-  //       form.setError("file", {
-  //         message: "File type is not valid",
-  //         type: "typeError",
-  //       });
-  //     } else {
-  //       form.setValue("file", acceptedFiles[0]);
-  //       form.clearErrors("file");
-
-  //       const filePreviews = Array.from(acceptedFiles).map((file) =>
-  //         URL.createObjectURL(file),
-  //       );
-  //       setFilePreviews(filePreviews);
-  //     }
-  //   } else {
-  //     form.setValue("file", null);
-  //     form.setError("file", {
-  //       message: "File is required",
-  //       type: "typeError",
-  //     });
-  //   }
-  // }
-
-  // function handlePaste(event: ClipboardEventHandler<HTMLDivElement>): void {
-  //   handleOnDrop(event.clipboardData.files);
-  // }
-
   const mutation = useMutation({
-    mutationFn: (data: FormSchemaType) => {
-      console.log("test " + date);
+    mutationFn: (data: ArticleTest) => {
+      console.log(`Data ${JSON.stringify(data)}`);
       return article.create(data);
     },
     onSuccess: () => {
@@ -109,15 +57,20 @@ export function InputForm() {
     },
   });
 
-  function onSubmit(data: FormSchemaType) {
-    console.log(data);
-    toast.message("Form Submitted");
-    mutation.mutate(data);
-  }
+  const onSubmit: SubmitHandler<ArticleTest> = (data) => {
+    console.log(`Data before ${JSON.stringify(data)}`);
+    // mutation.mutate(data);
+  };
+
+  // async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  //   console.log(formData);
+  //   const formData = new FormData(event.currentTarget);
+  //   console.log(formData);
+  //   mutation.mutate(formData);
+  // }
 
   return (
     <>
-      <Toaster />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -179,54 +132,19 @@ export function InputForm() {
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="file"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>File</FormLabel>
                 <FormControl>
-                  <Input type="file" {...fileRef} />
+                  <Input type="file" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
-          />
-
-          {/* <div onPaste={handlePaste}> */}
-          {/* <FormField
-              control={form.control}
-              name="file"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <Dropzone
-                      {...field}
-                      dropMessage="Drop files or click here"
-                      multiple
-                      handleOnDrop={handleOnDrop}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} 
-            />*/}
-
-          {/* <div className="mt-2 flex space-x-2">
-              {filePreviews.map((preview, index) => (
-                <div key={index} className="relative">
-                  <img src={preview} className="h-32 w-32 object-cover" />
-                  <button
-                    type="button"
-                    className="absolute right-1 top-1 rounded-full bg-white px-1 font-mono text-xs font-medium	text-black"
-                    onClick={() => removeFilePreview(index)}
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
-            </div> */}
-          {/* </div> */}
+          /> */}
 
           <Button type="submit">Submit</Button>
         </form>
