@@ -1,6 +1,6 @@
-import { InputForm } from "@/components/Form/InputFormFinal";
+import { InputForm } from "@/components/Form/InputForm";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,

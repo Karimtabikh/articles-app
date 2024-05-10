@@ -1,6 +1,3 @@
-"use client";
-
-import { AutoResizeTextarea } from "@/components/ui/autoresizetextarea";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,120 +8,65 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import * as article from "@/lib/api/article";
+import type { ArticleTest } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+
+import { formSchema } from "../../schema/ZodValidationtest";
+import CustomDropZone from "../ui/CustomDropZone";
+import RefenceInput from "../ui/RefenceInput";
+import { AutoResizeTextarea } from "../ui/autoresizetextarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { Toaster, toast } from "sonner";
-import { z } from "zod";
-
-import Dropzone from "../ui/Dropzone";
+} from "../ui/select";
 import useAutosizeTextArea from "../useAutosizeTextArea";
-
-const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
-const ACCEPTED_FILE_TYPES = ["image/png"];
-
-const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  description: z.string(),
-  category: z.string(),
-  file: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => {
-      return !file || file.size <= MAX_UPLOAD_SIZE;
-    }, "File size must be less than 3MB")
-    .refine((file) => {
-      return ACCEPTED_FILE_TYPES.includes(file.type);
-    }, "File must be a PNG"),
-});
 
 export function InputForm() {
   const [value, setValue] = useState("");
-  const [filePreviews, setFilePreviews] = useState([]);
-
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(textAreaRef.current, value);
 
   const handleChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = evt.target?.value;
-
-    setValue(val);
+    setValue(evt.target?.value);
   };
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<ArticleTest>({
     defaultValues: {
-      username: "",
-      file: null,
+      title: "",
+      category: "",
+      description: "",
+      file: "",
     },
-    shouldFocusError: true,
-    shouldUnregister: false,
-    shouldUseNativeValidation: false,
+    resolver: zodResolver(formSchema),
   });
 
-  function removeFilePreview(index: number) {
-    const updatedPreviews = [...filePreviews];
-    updatedPreviews.splice(index, 1);
-    setFilePreviews(updatedPreviews);
-    form.setValue("file", null);
-  }
+  const mutation = useMutation({
+    mutationFn: (formData: FormData) => {
+      return article.create(formData);
+    },
+    onSuccess: () => {
+      alert("Article created");
+    },
+  });
 
-  function handleOnDrop(acceptedFiles: FileList | null) {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      const allowedTypes = [
-        {
-          name: "image",
-          types: ["image/png", "image/jpg", "image/jpeg"],
-        },
-      ];
-      const fileType = allowedTypes.find((allowedType) =>
-        allowedType.types.find((type) => type === acceptedFiles[0].type),
-      );
-      if (!fileType) {
-        form.setValue("file", null);
-        form.setError("file", {
-          message: "File type is not valid",
-          type: "typeError",
-        });
-      } else {
-        form.setValue("file", acceptedFiles[0]);
-        form.clearErrors("file");
-
-        const filePreviews = Array.from(acceptedFiles).map((file) =>
-          URL.createObjectURL(file),
-        );
-        setFilePreviews(filePreviews);
-      }
-    } else {
-      form.setValue("file", null);
-      form.setError("file", {
-        message: "File is required",
-        type: "typeError",
-      });
-    }
-  }
-
-  function handlePaste(event: ClipboardEvent<HTMLDivElement>): void {
-    handleOnDrop(event.clipboardData.files);
-  }
-
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast.message("Form Submitted");
-  }
+  const onSubmit: SubmitHandler<ArticleTest> = (data) => {
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("description", data.description);
+    formData.append("category", data.category);
+    mutation.mutate(formData);
+  };
 
   return (
     <>
-      <Toaster />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -132,12 +74,12 @@ export function InputForm() {
         >
           <FormField
             control={form.control}
-            name="username"
+            name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="shadcn" {...field} />
+                  <Input placeholder="Your Title" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,12 +90,12 @@ export function InputForm() {
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
+              <FormItem {...field}>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <AutoResizeTextarea
-                    {...field}
                     onChange={handleChange}
+                    placeholder="Your Description"
                     ref={textAreaRef}
                     rows={3}
                     value={value}
@@ -168,12 +110,12 @@ export function InputForm() {
             control={form.control}
             name="category"
             render={({ field }) => (
-              <FormItem>
+              <FormItem {...field}>
                 <FormLabel>Category</FormLabel>
                 <FormControl>
                   <Select>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Category" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="technology">Technology</SelectItem>
@@ -187,42 +129,13 @@ export function InputForm() {
             )}
           />
 
-          <div onPaste={handlePaste}>
-            <FormField
-              control={form.control}
-              name="file"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <Dropzone
-                      {...field}
-                      dropMessage="Drop files or click here"
-                      multiple
-                      handleOnDrop={handleOnDrop}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <CustomDropZone />
 
-            <div className="mt-2 flex space-x-2">
-              {filePreviews.map((preview, index) => (
-                <div key={index} className="relative">
-                  <img src={preview} className="h-32 w-32 object-cover" />
-                  <button
-                    type="button"
-                    className="absolute right-1 top-1 rounded-full bg-white px-1 font-mono text-xs font-medium	text-black"
-                    onClick={() => removeFilePreview(index)}
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RefenceInput />
 
-          <Button type="submit">Submit</Button>
+          <Button className="w-full py-6 text-base" type="submit">
+            Submit
+          </Button>
         </form>
       </Form>
     </>
