@@ -19,17 +19,22 @@ export default function RefenceInput() {
   console.log(data);
 
   return (
-    <Select>
-      <SelectTrigger>
-        <SelectValue placeholder="Reference" />
-      </SelectTrigger>
-      <SelectContent>
-        {data?.map((article: Article) => (
-          <SelectItem key={article.title} value={article.title}>
-            {article.title}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <>
+      <label className="text-base font-medium peer-disabled:cursor-not-allowed">
+        Reference
+      </label>
+      <Select>
+        <SelectTrigger>
+          <SelectValue placeholder="Choose the related articles" />
+        </SelectTrigger>
+        <SelectContent>
+          {data?.map((article: Article) => (
+            <SelectItem key={article.title} value={article.title}>
+              {article.title}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 }

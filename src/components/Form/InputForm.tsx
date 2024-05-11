@@ -11,13 +11,13 @@ import { Input } from "@/components/ui/input";
 import * as article from "@/lib/api/article";
 import type { ArticleTest } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 
 import { formSchema } from "../../schema/ZodValidationtest";
 import CustomDropZone from "../ui/CustomDropZone";
-import RefenceInput from "../ui/RefenceInput";
+import CustomSelect from "../ui/CustomSelect";
 import { AutoResizeTextarea } from "../ui/autoresizetextarea";
 import {
   Select,
@@ -43,9 +43,13 @@ export function InputForm() {
       title: "",
       category: "",
       description: "",
-      file: "",
     },
     resolver: zodResolver(formSchema),
+  });
+
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["article"],
+    queryFn: () => article.get(),
   });
 
   const mutation = useMutation({
@@ -131,7 +135,7 @@ export function InputForm() {
 
           <CustomDropZone />
 
-          <RefenceInput />
+          {data && <CustomSelect options={data} />}
 
           <Button className="w-full py-6 text-base" type="submit">
             Submit
