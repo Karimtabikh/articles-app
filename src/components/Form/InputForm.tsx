@@ -47,10 +47,37 @@ export function InputForm() {
     resolver: zodResolver(formSchema),
   });
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["article"],
-    queryFn: () => article.get(),
-  });
+  // const { data, isError, isLoading } = useQuery({
+  //   queryKey: ["article"],
+  //   queryFn: () => article.get(),
+  // });
+
+  const data = [
+    {
+      id: 1,
+      title: "Prisma Adds Support for MongoDB",
+      description:
+        "We are excited to share that today's Prisma ORM release adds stable support for MongoDB!",
+    },
+    {
+      id: 2,
+      title: "What's new in Prisma? (Q1/22)",
+      description:
+        "Learn about everything in the Prisma ecosystem and community from January to March 2022.",
+    },
+    {
+      id: 3,
+      title: "Introducing Prisma Migrate",
+      description:
+        "Discover the latest addition to the Prisma toolset, empowering developers to evolve their database schema effortlessly.",
+    },
+    {
+      id: 4,
+      title: "Scaling Your App with Prisma Client",
+      description:
+        "Explore strategies and best practices for optimizing performance and scalability when using Prisma Client in your application.",
+    },
+  ];
 
   const mutation = useMutation({
     mutationFn: (formData: FormData) => {
