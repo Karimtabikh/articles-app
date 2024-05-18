@@ -1,40 +1,37 @@
-import { useState } from "react";
-
 import { Button } from "./button";
 
-export default function CustomDropZone() {
-  const [files, setFiles] = useState<File[]>([]);
+type Props = {
+  values: File[];
+  onFilesChange: (newfiles: File[]) => void;
+};
 
+export default function CustomDropZone({ values, onFilesChange }: Props) {
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     event.preventDefault();
-    const total_files: File[] = [];
-
-    if (event.target.files) {
-      for (let i = 0; i < event.target.files.length; i++) {
-        total_files.push(event.target.files[i]);
-      }
-    }
-
-    setFiles((prevFiles) => [...prevFiles, ...total_files]);
+    const eventFiles = event.target.files;
+    handleFiles(eventFiles);
   }
 
   function handleDrag(event: React.DragEvent<HTMLInputElement>) {
     event.preventDefault();
+    const eventFiles = event.dataTransfer.files;
+    handleFiles(eventFiles);
+  }
+
+  const handleFiles = (eventFiles: FileList | null) => {
     const total_files: File[] = [];
 
-    if (event.dataTransfer.files) {
-      for (let i = 0; i < event.dataTransfer.files.length; i++) {
-        total_files.push(event.dataTransfer.files[i]);
+    if (eventFiles) {
+      for (let i = 0; i < eventFiles.length; i++) {
+        total_files.push(eventFiles[i]);
       }
     }
 
-    setFiles((prevFiles) => [...prevFiles, ...total_files]);
-  }
+    onFilesChange([...values, ...total_files]);
+  };
 
   const removeFile = (index: number) => {
-    setFiles((prevFiles) => {
-      return prevFiles.filter((_, i) => i !== index);
-    });
+    onFilesChange(values.filter((_, i) => i !== index));
   };
 
   return (
@@ -57,7 +54,7 @@ export default function CustomDropZone() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {files?.map((file, index) => {
+        {values?.map((file, index) => {
           return (
             <div className="relative" key={URL.createObjectURL(file)}>
               <img

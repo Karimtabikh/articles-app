@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import * as article from "@/lib/api/article";
-import type { ArticleTest } from "@/types";
+import type { Article } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 
-import { formSchema } from "../../schema/ZodValidationtest";
+import { formSchema } from "../../schema/ZodValidation";
 import CustomDropZone from "../ui/CustomDropZone";
 import CustomSelect from "../ui/CustomSelect";
 import { AutoResizeTextarea } from "../ui/autoresizetextarea";
@@ -30,15 +30,25 @@ import useAutosizeTextArea from "../useAutosizeTextArea";
 
 export function InputForm() {
   const [value, setValue] = useState("");
+  const [selectedValues, setSelectedValues] = useState<Article[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(textAreaRef.current, value);
+
+  const handleSelectedChange = (newValues: Article[]) => {
+    setSelectedValues(newValues);
+  };
+
+  const handleFiles = (newfiles: File[]) => {
+    setFiles(newfiles);
+  };
 
   const handleChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(evt.target?.value);
   };
 
-  const form = useForm<ArticleTest>({
+  const form = useForm<Article>({
     defaultValues: {
       title: "",
       category: "",
@@ -47,52 +57,34 @@ export function InputForm() {
     resolver: zodResolver(formSchema),
   });
 
-  // const { data, isError, isLoading } = useQuery({
-  //   queryKey: ["article"],
-  //   queryFn: () => article.get(),
-  // });
-
-  const data = [
-    {
-      id: 1,
-      title: "Prisma Adds Support for MongoDB",
-      description:
-        "We are excited to share that today's Prisma ORM release adds stable support for MongoDB!",
-    },
-    {
-      id: 2,
-      title: "What's new in Prisma? (Q1/22)",
-      description:
-        "Learn about everything in the Prisma ecosystem and community from January to March 2022.",
-    },
-    {
-      id: 3,
-      title: "Introducing Prisma Migrate",
-      description:
-        "Discover the latest addition to the Prisma toolset, empowering developers to evolve their database schema effortlessly.",
-    },
-    {
-      id: 4,
-      title: "Scaling Your App with Prisma Client",
-      description:
-        "Explore strategies and best practices for optimizing performance and scalability when using Prisma Client in your application.",
-    },
-  ];
+  const { data } = useQuery({
+    queryKey: ["article"],
+    queryFn: () => article.get(),
+  });
 
   const mutation = useMutation({
     mutationFn: (formData: FormData) => {
       return article.create(formData);
     },
     onSuccess: () => {
-      alert("Article created");
+      console.log("Article created");
     },
   });
 
-  const onSubmit: SubmitHandler<ArticleTest> = (data) => {
+  const onSubmit: SubmitHandler<Article> = (data) => {
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("description", data.description);
     formData.append("category", data.category);
+
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files[]", files[i]);
+    }
+
+    for (let i = 0; i < selectedValues.length; i++) {
+      formData.append("reference[]", selectedValues[i].title);
+    }
+
     mutation.mutate(formData);
   };
 
@@ -160,9 +152,15 @@ export function InputForm() {
             )}
           />
 
-          <CustomDropZone />
+          <CustomDropZone values={files} onFilesChange={handleFiles} />
 
-          {data && <CustomSelect options={data} />}
+          {data && data.length > 0 && (
+            <CustomSelect
+              options={data}
+              values={selectedValues}
+              onSelectedChange={handleSelectedChange}
+            />
+          )}
 
           <Button className="w-full py-6 text-base" type="submit">
             Submit

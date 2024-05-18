@@ -12,7 +12,7 @@ declare module "@tanstack/react-router" {
 
 export default function App() {
   return (
-    <div className="bg-secondary-50 h-screen text-primary">
+    <div className="bg-secondary-50 min-h-screen text-primary">
       <RouterProvider router={router} />
     </div>
   );

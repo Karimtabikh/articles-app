@@ -1,53 +1,20 @@
 import type { Article } from "@/types";
 import { useEffect, useRef, useState } from "react";
 
+import CloseIcon from "../Icons/CloseIcon";
+import DownArrow from "../Icons/DownArrow";
+import { Button } from "./button";
 import { Input } from "./input";
 
 type Props = {
   options: Article[];
+  values: Article[];
+  onSelectedChange: (newValues: Article[]) => void;
 };
 
-const CloseIcon = () => {
-  return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      x="0px"
-      y="0px"
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-    >
-      <path d="M 4.7070312 3.2929688 L 3.2929688 4.7070312 L 10.585938 12 L 3.2929688 19.292969 L 4.7070312 20.707031 L 12 13.414062 L 19.292969 20.707031 L 20.707031 19.292969 L 13.414062 12 L 20.707031 4.7070312 L 19.292969 3.2929688 L 12 10.585938 L 4.7070312 3.2929688 z" />
-    </svg>
-  );
-};
-
-const DownArrow = () => {
-  return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
-    <svg
-      fill="#000000"
-      height="15px"
-      width="15px"
-      version="1.1"
-      id="Layer_1"
-      viewBox="0 0 330 330"
-    >
-      <path
-        id="XMLID_225_"
-        d="M325.607,79.393c-5.857-5.857-15.355-5.858-21.213,0.001l-139.39,139.393L25.607,79.393
-	c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393
-	s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"
-      />
-    </svg>
-  );
-};
-
-const CustomSelect = ({ options }: Props) => {
+const CustomSelect = ({ options, values, onSelectedChange }: Props) => {
   const [inputValue, setInputValue] = useState("");
   const [selectOptions, setSelectOptions] = useState<Article[]>(options);
-  const [selectedValues, setSelectedValues] = useState<Article[]>([]);
   const [showMenu, setShowMenu] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,44 +48,38 @@ const CustomSelect = ({ options }: Props) => {
   };
 
   const handleOptionClick = (option: Article) => {
-    if (!selectedValues.includes(option)) {
-      setSelectedValues((prevValues) => [...prevValues, option]);
+    if (!values.includes(option)) {
+      onSelectedChange([...values, option]);
     } else {
-      setSelectedValues((prevValues) =>
-        prevValues.filter((f) => f.title !== option.title),
-      );
+      onSelectedChange(values.filter((f) => f.title !== option.title));
     }
   };
 
   const handleSelectedItem = (
-    event: React.MouseEvent<HTMLDivElement>,
+    event: React.MouseEvent<HTMLButtonElement> | undefined,
     value: Article,
   ) => {
-    event.stopPropagation();
-    setSelectedValues((prevValues) => {
-      return prevValues.filter((f) => f !== value);
-    });
+    event?.stopPropagation();
+    onSelectedChange(values.filter((f) => f !== value));
   };
 
   return (
     <div>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
       <div
         onClick={() => handleMenu()}
-        className="mb-2 flex w-full cursor-pointer flex-row items-start justify-between rounded-md bg-white p-2 text-sm"
+        className="mb-2 flex h-auto w-full cursor-pointer flex-row items-start justify-between rounded-md bg-white p-2 text-sm text-black hover:bg-white"
       >
         <div className="flex flex-row flex-wrap gap-2">
-          {selectedValues && selectedValues.length > 0 ? (
-            selectedValues.map((value) => {
+          {values && values.length > 0 ? (
+            values.map((value) => {
               return (
-                // biome-ignore lint/a11y/useKeyWithClickEvents: <No Key events >
-                <div
-                  className="flex cursor-pointer flex-row items-center gap-2 rounded-md bg-secondary-50 px-2 py-1"
+                <Button
+                  className="flex h-6 flex-row items-center gap-2 rounded-md bg-secondary-200 py-2 text-black hover:bg-secondary-200 hover:text-white"
                   key={value.title}
                   onClick={(event) => handleSelectedItem(event, value)}
                 >
                   {value.title} <CloseIcon />
-                </div>
+                </Button>
               );
             })
           ) : (
@@ -141,33 +102,30 @@ const CustomSelect = ({ options }: Props) => {
               ref={inputRef}
             />
 
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
             {inputRef.current && (
-              <div
-                className="absolute right-2 top-3 cursor-pointer"
+              <Button
+                className="absolute right-2 top-3 h-4 bg-transparent p-0 hover:bg-transparent"
                 onClick={() => clearInput()}
               >
                 <CloseIcon />
-              </div>
+              </Button>
             )}
           </div>
-          <div className="select_scroll my-1 h-32 overflow-hidden overflow-y-scroll">
+          <div className="select_scroll my-1 flex h-32 flex-col overflow-hidden overflow-y-scroll">
             {selectOptions?.map((option) => {
-              const active = selectedValues.includes(option);
+              const active = values.includes(option);
               return (
-                // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                <div
+                <Button
                   className={
                     active
-                      ? "m-1 cursor-pointer rounded-md bg-secondary-50 px-2 py-1"
-                      : "m-1 cursor-pointer p-1"
+                      ? "m-1 rounded-md bg-secondary-200 hover:bg-secondary-200"
+                      : "m-1 bg-primary-100 text-black hover:bg-secondary-200"
                   }
-                  // className="cursor-pointer px-2 py-1"
                   key={option.title}
                   onClick={() => handleOptionClick(option)}
                 >
                   {option.title}
-                </div>
+                </Button>
               );
             })}
           </div>
