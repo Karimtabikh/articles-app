@@ -3,6 +3,6 @@ export type Article = {
   title: string;
   description: string;
   category: string;
-  file: string;
+  files: string;
   reference: string[];
 };

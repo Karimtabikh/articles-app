@@ -59,7 +59,7 @@ export function InputForm() {
 
   const { data } = useQuery({
     queryKey: ["article"],
-    queryFn: () => article.get(),
+    queryFn: () => article.getAllArticles(),
   });
 
   const mutation = useMutation({

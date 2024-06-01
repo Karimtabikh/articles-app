@@ -14,3 +14,8 @@ export const get = async (): Promise<Article[]> => {
   const res = await fetch(`${API_ENDPOINT}`);
   return res.json();
 };
+
+export const getAllArticles = async (): Promise<Article[]> => {
+  const res = await fetch(`${API_ENDPOINT}/all`);
+  return res.json();
+};

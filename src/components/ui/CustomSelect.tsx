@@ -47,7 +47,12 @@ const CustomSelect = ({ options, values, onSelectedChange }: Props) => {
     }
   };
 
-  const handleOptionClick = (option: Article) => {
+  const handleOptionClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    option: Article,
+  ) => {
+    event.preventDefault(); 
+
     if (!values.includes(option)) {
       onSelectedChange([...values, option]);
     } else {
@@ -122,7 +127,7 @@ const CustomSelect = ({ options, values, onSelectedChange }: Props) => {
                       : "m-1 bg-primary-100 text-black hover:bg-secondary-200"
                   }
                   key={option.title}
-                  onClick={() => handleOptionClick(option)}
+                  onClick={(event) => handleOptionClick(event, option)}
                 >
                   {option.title}
                 </Button>
