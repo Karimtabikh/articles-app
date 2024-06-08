@@ -19,3 +19,8 @@ export const getAllArticles = async (): Promise<Article[]> => {
   const res = await fetch(`${API_ENDPOINT}/all`);
   return res.json();
 };
+
+export const getArticlesCategories = async (): Promise<Article[]> => {
+  const res = await fetch(`${API_ENDPOINT}/categories`);
+  return res.json();
+};
