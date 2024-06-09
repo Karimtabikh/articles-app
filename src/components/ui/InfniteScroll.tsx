@@ -1,3 +1,4 @@
+import { useThrottle } from "@/hook/useThrottle";
 import type { Article } from "@/types";
 import {
   keepPreviousData,
@@ -18,6 +19,8 @@ const InfiniteScroll = () => {
     sortOrder: "asc",
   });
 
+  const throttledFilter = useThrottle(filter, 500);
+
   const fetchCategories = async () => {
     const res = await fetch("http://localhost:3000/articles/categories");
     return res.json();
@@ -30,14 +33,14 @@ const InfiniteScroll = () => {
 
   const fetchArticles = async (page = 0) => {
     const res = await fetch(
-      `http://localhost:3000/articles?page=${page}&category=${filter.category}&title=${filter.title}&description=${filter.description}&sortBy=${filter.sortby}&sortOrder=${filter.sortOrder}`,
+      `http://localhost:3000/articles?page=${page}&category=${throttledFilter.category}&title=${throttledFilter.title}&description=${throttledFilter.description}&sortBy=${throttledFilter.sortby}&sortOrder=${throttledFilter.sortOrder}`,
     );
 
     return res.json();
   };
 
   const { status, data, error, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["articles", filter, page],
+    queryKey: ["articles", throttledFilter, page],
     queryFn: () => fetchArticles(page),
     placeholderData: keepPreviousData,
     staleTime: 5000,
@@ -46,11 +49,18 @@ const InfiniteScroll = () => {
   useEffect(() => {
     if (!isPlaceholderData && data?.hasMore) {
       queryClient.prefetchQuery({
-        queryKey: ["articles", filter, page + 1],
+        queryKey: ["articles", throttledFilter, page + 1],
         queryFn: () => fetchArticles(page + 1),
       });
     }
-  }, [data, isPlaceholderData, page, queryClient, fetchArticles, filter]);
+  }, [
+    data,
+    isPlaceholderData,
+    page,
+    queryClient,
+    fetchArticles,
+    throttledFilter,
+  ]);
 
   const handleChange = (value: string, field: string) => {
     setFilter((prevFilter) => ({
