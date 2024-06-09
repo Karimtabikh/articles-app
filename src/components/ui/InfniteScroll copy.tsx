@@ -1,15 +1,12 @@
 import type { Article } from "@/types";
-import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
+// import { useEffect } from "react";
+// import { useInView } from "react-intersection-observer";
 
 const InfiniteScroll = () => {
-  const queryClient = useQueryClient();
-  const [page, setPage] = useState(0);
-
+  // const { ref, inView } = useInView();
   const [filter, setFilter] = useState({
     title: "",
     category: "",
@@ -28,29 +25,38 @@ const InfiniteScroll = () => {
     queryFn: fetchCategories,
   });
 
-  const fetchArticles = async (page = 0) => {
+  const fetchArticles = async () => {
     const res = await fetch(
-      `http://localhost:3000/articles?page=${page}&category=${filter.category}&title=${filter.title}&description=${filter.description}&sortBy=${filter.sortby}&sortOrder=${filter.sortOrder}`,
+      `http://localhost:3000/articles?category=${filter.category}&title=${filter.title}&description=${filter.description}&sortBy=${filter.sortby}&sortOrder=${filter.sortOrder}`,
     );
 
     return res.json();
   };
 
-  const { status, data, error, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["articles", filter, page],
-    queryFn: () => fetchArticles(page),
-    placeholderData: keepPreviousData,
-    staleTime: 5000,
+  // const {
+  //   status,
+  //   data,
+  //   error,
+  //   isFetchingNextPage,
+  //   fetchNextPage,
+  //   hasNextPage,
+  // } = useInfiniteQuery({
+  //   queryKey: ["projects", filter],
+  //   queryFn: fetchArticles,
+  //   initialPageParam: 0,
+  //   getNextPageParam: (lastPage) => lastPage.nextId ?? undefined,
+  // });
+
+  const { status, data, error } = useQuery({
+    queryKey: ["projects", filter],
+    queryFn: fetchArticles,
   });
 
-  useEffect(() => {
-    if (!isPlaceholderData && data?.hasMore) {
-      queryClient.prefetchQuery({
-        queryKey: ["articles", filter, page + 1],
-        queryFn: () => fetchArticles(page + 1),
-      });
-    }
-  }, [data, isPlaceholderData, page, queryClient, fetchArticles, filter]);
+  // useEffect(() => {
+  //   if (inView) {
+  //     fetchNextPage();
+  //   }
+  // }, [fetchNextPage, inView]);
 
   const handleChange = (value: string, field: string) => {
     setFilter((prevFilter) => ({
@@ -118,43 +124,25 @@ const InfiniteScroll = () => {
           <option value="desc">Descending</option>
         </select>
       </div>
-
       {status === "pending" ? (
-        <div>Loading...</div>
+        <p>Loading...</p>
       ) : status === "error" ? (
-        <div>Error: {error.message}</div>
+        <span>Error: {error.message}</span>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2">
-            {data.posts.map((article: Article) => (
-              <div className="rounded-md bg-white p-3" key={article.id}>
-                <p className="font-semibold capitalize text-gray-500">
-                  {article.category}
-                </p>
-                <h1 className="my-1 text-xl font-bold">{article.title}</h1>
-                <div className="">{article.description}</div>
-              </div>
-            ))}
+          <div className="grid gap-2">
+            <div className="grid grid-cols-3 gap-2">
+              {data?.map((article: Article) => (
+                <div className="rounded-md bg-white p-3" key={article.id}>
+                  <p className="font-semibold capitalize text-gray-500">
+                    {article.category}
+                  </p>
+                  <h1 className="my-1 text-xl font-bold">{article.title}</h1>
+                  <div className="">{article.description}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>Current Page: {page + 1}</div>
-          <div>Total Page: {data.totalPages + 1}</div>
-          {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
-          <button
-            onClick={() => setPage((old) => Math.max(old - 1, 0))}
-            disabled={page === 0}
-          >
-            Previous Page
-          </button>{" "}
-          {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
-          <button
-            onClick={() => {
-              setPage((old) => (data?.hasMore ? old + 1 : old));
-            }}
-            disabled={isPlaceholderData || !data?.hasMore}
-          >
-            Next Page
-          </button>
-          {isFetching ? <span> Loading...</span> : null}
         </>
       )}
     </>
