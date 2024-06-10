@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useThrottle(value, interval = 500) {
+export function useThrottle<T>(value: T, interval = 500) {
   const [throttledValue, setThrottledValue] = useState(value);
-  const lastUpdated = useRef(null);
+  const lastUpdated = useRef<number | null>(null);
 
   useEffect(() => {
     const now = Date.now();

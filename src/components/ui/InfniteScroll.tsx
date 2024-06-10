@@ -6,17 +6,31 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+interface filterType {
+  search: string;
+  category: string;
+  sortby: string;
+  sortOrder: string;
+  startDate: Date | null;
+  endDate: Date | null;
+}
 
 const InfiniteScroll = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const [filter, setFilter] = useState({
-    title: "",
+  const [filter, setFilter] = useState<filterType>({
+    search: "",
     category: "",
-    description: "",
     sortby: "title",
     sortOrder: "asc",
+    startDate: null,
+    endDate: null,
   });
 
   const throttledFilter = useThrottle(filter, 500);
@@ -32,9 +46,33 @@ const InfiniteScroll = () => {
   });
 
   const fetchArticles = async (page = 0) => {
-    const res = await fetch(
-      `http://localhost:3000/articles?page=${page}&category=${throttledFilter.category}&title=${throttledFilter.title}&description=${throttledFilter.description}&sortBy=${throttledFilter.sortby}&sortOrder=${throttledFilter.sortOrder}`,
-    );
+    const url = new URL("http://localhost:3000/articles");
+    if (page) {
+      url.searchParams.append("page", page.toString());
+    }
+    if (throttledFilter.category) {
+      url.searchParams.append("category", throttledFilter.category);
+    }
+    if (throttledFilter.search) {
+      url.searchParams.append("search", throttledFilter.search);
+    }
+    if (throttledFilter.sortby) {
+      url.searchParams.append("sortBy", throttledFilter.sortby);
+    }
+    if (throttledFilter.sortOrder) {
+      url.searchParams.append("sortOrder", throttledFilter.sortOrder);
+    }
+    if (throttledFilter.startDate) {
+      url.searchParams.append(
+        "startDate",
+        throttledFilter.startDate.toISOString(),
+      );
+    }
+    if (throttledFilter.endDate) {
+      url.searchParams.append("endDate", throttledFilter.endDate.toISOString());
+    }
+
+    const res = await fetch(url);
 
     return res.json();
   };
@@ -69,6 +107,18 @@ const InfiniteScroll = () => {
     }));
   };
 
+  const handleDateChange = (range: [Date | null, Date | null]) => {
+    console.log(range);
+    const [startDate, endDate] = range;
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setFilter((prevFilter) => ({
+      ...prevFilter,
+      startDate: startDate ? startDate : null,
+      endDate: endDate ? endDate : null,
+    }));
+  };
+
   return (
     <>
       <div className="mb-2">
@@ -93,20 +143,10 @@ const InfiniteScroll = () => {
         </div>
 
         <div className="mb-8">
-          <label className="mr-4 font-bold">Title</label>
+          <label className="mr-4 font-bold">Search</label>
           <input
-            name="title"
-            onChange={(event) => handleChange(event.target.value, "title")}
-            type="search"
-          />
-        </div>
-        <div className="mb-8">
-          <label className="mr-4 font-bold">Description</label>
-          <input
-            name="description"
-            onChange={(event) =>
-              handleChange(event.target.value, "description")
-            }
+            name="search"
+            onChange={(event) => handleChange(event.target.value, "search")}
             type="search"
           />
         </div>
@@ -127,6 +167,15 @@ const InfiniteScroll = () => {
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
         </select>
+
+        <label>Sort By Date:</label>
+        <DatePicker
+          selected={startDate}
+          onChange={handleDateChange}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+        />
       </div>
 
       {status === "pending" ? (
