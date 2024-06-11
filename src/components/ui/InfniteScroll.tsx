@@ -9,9 +9,11 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import { Button } from "./button";
+
 interface filterType {
   search: string;
-  category: string;
+  filterCategories: string[];
   sortby: string;
   sortOrder: string;
   startDate: Date | null;
@@ -21,12 +23,13 @@ interface filterType {
 const InfiniteScroll = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  const [categories, setCategories] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [filter, setFilter] = useState<filterType>({
     search: "",
-    category: "",
+    filterCategories: categories,
     sortby: "title",
     sortOrder: "asc",
     startDate: null,
@@ -50,8 +53,14 @@ const InfiniteScroll = () => {
     if (page) {
       url.searchParams.append("page", page.toString());
     }
-    if (throttledFilter.category) {
-      url.searchParams.append("category", throttledFilter.category);
+    if (
+      throttledFilter.filterCategories &&
+      throttledFilter.filterCategories.length > 0
+    ) {
+      url.searchParams.append(
+        "category",
+        throttledFilter.filterCategories.join(","),
+      );
     }
     if (throttledFilter.search) {
       url.searchParams.append("search", throttledFilter.search);
@@ -100,6 +109,13 @@ const InfiniteScroll = () => {
     throttledFilter,
   ]);
 
+  useEffect(() => {
+    setFilter((prevFilter) => ({
+      ...prevFilter,
+      filterCategories: categories,
+    }));
+  }, [categories]);
+
   const handleChange = (value: string, field: string) => {
     setFilter((prevFilter) => ({
       ...prevFilter,
@@ -108,7 +124,6 @@ const InfiniteScroll = () => {
   };
 
   const handleDateChange = (range: [Date | null, Date | null]) => {
-    console.log(range);
     const [startDate, endDate] = range;
     setStartDate(startDate);
     setEndDate(endDate);
@@ -119,6 +134,16 @@ const InfiniteScroll = () => {
     }));
   };
 
+  const handleSelectCategory = (newCat: string) => {
+    if (newCat == "all") return setCategories([]);
+    setCategories((prevCategories) => {
+      if (!prevCategories.includes(newCat)) {
+        return [...prevCategories, newCat];
+      }
+      return prevCategories.filter((f) => f !== newCat);
+    });
+  };
+
   return (
     <>
       <div className="mb-2">
@@ -126,20 +151,33 @@ const InfiniteScroll = () => {
 
         <div className="mb-8">
           <label className="mr-4 font-bold">Categories</label>
-          <select
-            name="category"
-            className="capitalize"
-            onChange={(event) => handleChange(event.target.value, "category")}
+          <Button
+            onClick={() => {
+              handleSelectCategory("all");
+            }}
+            className="mr-2"
           >
-            <option value={""}>All</option>
-            {categoriesQuery.data?.map((category) => {
-              return (
-                <option key={category.category} value={category.category}>
-                  {category.category}
-                </option>
-              );
-            })}
-          </select>
+            All
+          </Button>
+          {categoriesQuery.data?.map((category: string) => {
+            const active = categories.includes(category);
+            return (
+              <Button
+                onClick={() => {
+                  handleSelectCategory(category);
+                }}
+                type="button"
+                className={
+                  active
+                    ? "mr-2 bg-white capitalize text-black"
+                    : "mr-2 bg-primary capitalize"
+                }
+                key={category}
+              >
+                {category}
+              </Button>
+            );
+          })}
         </div>
 
         <div className="mb-8">
