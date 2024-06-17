@@ -6,15 +6,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
-import { Button } from "./button";
+import Filter from "./filter";
 
 interface filterType {
   search: string;
   filterCategories: string[];
-  sortby: string;
   sortOrder: string;
   startDate: Date | null;
   endDate: Date | null;
@@ -24,28 +21,29 @@ const InfiniteScroll = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [filter, setFilter] = useState<filterType>({
     search: "",
     filterCategories: categories,
-    sortby: "title",
     sortOrder: "asc",
     startDate: null,
     endDate: null,
   });
 
+  useEffect(() => {
+    setFilter((prevFilter) => ({
+      ...prevFilter,
+      filterCategories: categories,
+    }));
+  }, [categories]);
+
   const throttledFilter = useThrottle(filter, 500);
 
-  const fetchCategories = async () => {
-    const res = await fetch("http://localhost:3000/articles/categories");
-    return res.json();
-  };
-
-  const categoriesQuery = useQuery({
-    queryKey: ["categories"],
-    queryFn: fetchCategories,
+  const { status, data, error, isFetching, isPlaceholderData } = useQuery({
+    queryKey: ["articles", throttledFilter, page],
+    queryFn: () => fetchArticles(page),
+    placeholderData: keepPreviousData,
+    staleTime: 5000,
   });
 
   const fetchArticles = async (page = 0) => {
@@ -65,9 +63,6 @@ const InfiniteScroll = () => {
     if (throttledFilter.search) {
       url.searchParams.append("search", throttledFilter.search);
     }
-    if (throttledFilter.sortby) {
-      url.searchParams.append("sortBy", throttledFilter.sortby);
-    }
     if (throttledFilter.sortOrder) {
       url.searchParams.append("sortOrder", throttledFilter.sortOrder);
     }
@@ -86,13 +81,6 @@ const InfiniteScroll = () => {
     return res.json();
   };
 
-  const { status, data, error, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["articles", throttledFilter, page],
-    queryFn: () => fetchArticles(page),
-    placeholderData: keepPreviousData,
-    staleTime: 5000,
-  });
-
   useEffect(() => {
     if (!isPlaceholderData && data?.hasMore) {
       queryClient.prefetchQuery({
@@ -109,112 +97,13 @@ const InfiniteScroll = () => {
     throttledFilter,
   ]);
 
-  useEffect(() => {
-    setFilter((prevFilter) => ({
-      ...prevFilter,
-      filterCategories: categories,
-    }));
-  }, [categories]);
-
-  const handleChange = (value: string, field: string) => {
-    setFilter((prevFilter) => ({
-      ...prevFilter,
-      [field]: value,
-    }));
-  };
-
-  const handleDateChange = (range: [Date | null, Date | null]) => {
-    const [startDate, endDate] = range;
-    setStartDate(startDate);
-    setEndDate(endDate);
-    setFilter((prevFilter) => ({
-      ...prevFilter,
-      startDate: startDate ? startDate : null,
-      endDate: endDate ? endDate : null,
-    }));
-  };
-
-  const handleSelectCategory = (newCat: string) => {
-    if (newCat == "all") return setCategories([]);
-    setCategories((prevCategories) => {
-      if (!prevCategories.includes(newCat)) {
-        return [...prevCategories, newCat];
-      }
-      return prevCategories.filter((f) => f !== newCat);
-    });
-  };
-
   return (
     <>
-      <div className="mb-2">
-        <h2 className="my-4 text-lg font-bold">Filter By:</h2>
-
-        <div className="mb-8">
-          <label className="mr-4 font-bold">Categories</label>
-          <Button
-            onClick={() => {
-              handleSelectCategory("all");
-            }}
-            className="mr-2"
-          >
-            All
-          </Button>
-          {categoriesQuery.data?.map((category: string) => {
-            const active = categories.includes(category);
-            return (
-              <Button
-                onClick={() => {
-                  handleSelectCategory(category);
-                }}
-                type="button"
-                className={
-                  active
-                    ? "mr-2 bg-white capitalize text-black"
-                    : "mr-2 bg-primary capitalize"
-                }
-                key={category}
-              >
-                {category}
-              </Button>
-            );
-          })}
-        </div>
-
-        <div className="mb-8">
-          <label className="mr-4 font-bold">Search</label>
-          <input
-            name="search"
-            onChange={(event) => handleChange(event.target.value, "search")}
-            type="search"
-          />
-        </div>
-        <label>Sort By:</label>
-        <select
-          name="sortBy"
-          onChange={(event) => handleChange(event.target.value, "sortBy")}
-        >
-          <option value="title">Title</option>
-          <option value="createdAt">Date</option>
-        </select>
-
-        <label>Order:</label>
-        <select
-          name="sortOrder"
-          onChange={(event) => handleChange(event.target.value, "sortOrder")}
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-
-        <label>Sort By Date:</label>
-        <DatePicker
-          selected={startDate}
-          onChange={handleDateChange}
-          startDate={startDate}
-          endDate={endDate}
-          selectsRange
-        />
-      </div>
+      <Filter
+        setFilter={setFilter}
+        categoriesProp={categories}
+        setCategories={setCategories}
+      />
 
       {status === "pending" ? (
         <div>Loading...</div>
@@ -223,18 +112,30 @@ const InfiniteScroll = () => {
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2">
-            {data.posts.map((article: Article) => (
+            {data?.posts?.map((article: Article) => (
               <div className="rounded-md bg-white p-3" key={article.id}>
                 <p className="font-semibold capitalize text-gray-500">
                   {article.category}
                 </p>
-                <h1 className="my-1 text-xl font-bold">{article.title}</h1>
-                <div className="">{article.description}</div>
+                <div
+                  className="my-1 text-xl font-bold"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                  dangerouslySetInnerHTML={{
+                    __html: article.title,
+                  }}
+                />
+                <div
+                  className="line-clamp-3"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                  dangerouslySetInnerHTML={{
+                    __html: article.description,
+                  }}
+                />
               </div>
             ))}
           </div>
           <div>Current Page: {page + 1}</div>
-          <div>Total Page: {data.totalPages + 1}</div>
+          <div>Total Page: {data?.totalPages + 1}</div>
           {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
           <button
             onClick={() => setPage((old) => Math.max(old - 1, 0))}
