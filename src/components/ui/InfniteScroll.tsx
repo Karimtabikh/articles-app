@@ -1,5 +1,5 @@
 import { useThrottle } from "@/hook/useThrottle";
-import type { Article } from "@/types";
+import type { Article, filterType } from "@/types";
 import {
   keepPreviousData,
   useQuery,
@@ -9,13 +9,12 @@ import { useEffect, useState } from "react";
 
 import Filter from "./filter";
 
-interface filterType {
-  search: string;
-  filterCategories: string[];
-  sortOrder: string;
-  startDate: Date | null;
-  endDate: Date | null;
-}
+const highlightText = (text: string, search: string) => {
+  return text.replace(
+    new RegExp(search, "ig"),
+    "<mark class='bg-yellow-200'>$&</mark>",
+  );
+};
 
 const InfiniteScroll = () => {
   const queryClient = useQueryClient();
@@ -121,14 +120,20 @@ const InfiniteScroll = () => {
                   className="my-1 text-xl font-bold"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                   dangerouslySetInnerHTML={{
-                    __html: article.title,
+                    __html: highlightText(
+                      article.title,
+                      throttledFilter.search,
+                    ),
                   }}
                 />
                 <div
                   className="line-clamp-3"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                   dangerouslySetInnerHTML={{
-                    __html: article.description,
+                    __html: highlightText(
+                      article.description,
+                      throttledFilter.search,
+                    ),
                   }}
                 />
               </div>

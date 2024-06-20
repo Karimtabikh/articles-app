@@ -1,11 +1,18 @@
+import type { filterType } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type Dispatch, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 import { Button } from "./button";
 
-const Filter = ({ setFilter, categoriesProp, setCategories }) => {
+interface FilterProps {
+  setFilter: Dispatch<React.SetStateAction<filterType>>;
+  categoriesProp: string[];
+  setCategories: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
+const Filter = ({ setFilter, categoriesProp, setCategories }: FilterProps) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
@@ -52,30 +59,7 @@ const Filter = ({ setFilter, categoriesProp, setCategories }) => {
       ...prevFilter,
       [field]: value,
     }));
-
-    // if (value === "") {
-    //   return;
-    // }
-
-    // searchHighlight(value);
   };
-
-  //   const searchHighlight = (searchedTerm) => {
-  //     const searchText = searchedTerm.toLowerCase().trim();
-  //     const regExp = new RegExp(searchText, "ig");
-
-  //     const filteredData = data?.posts?.map((post) => {
-  //       let highlightedText = post.title;
-  //       if (post.title.toLowerCase().includes(searchText)) {
-  //         highlightedText = post.title.replace(
-  //           regExp,
-  //           "<mark class='bg-yellow-200'>$&</mark>",
-  //         );
-  //       }
-  //       return { ...post, customTitle: highlightedText };
-  //     });
-  //     setToggle((prev) => !prev)
-  //   };
 
   return (
     <div className="mb-2">
